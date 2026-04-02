@@ -109,7 +109,7 @@ if st.button("🚀 Calculează Soluția Optimă", type="primary", use_container_
     st.divider()
     
     # --- PASUL 1: Strategii Pure ---
-    st.markdown("<h3 style='color: #CE93D8;'>2. Pasul 1: Analiza în strategii pure</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color: #CE93D8;'>2. Pasul 1: Calculăm: α, β, v1, v2</h3>", unsafe_allow_html=True)
     are_sa, val_sa, pos, alpha, beta = analiza_strategii_pure(Q)
     v1 = np.max(alpha)
     v2 = np.min(beta)
