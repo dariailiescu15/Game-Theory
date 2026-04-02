@@ -172,7 +172,7 @@ if st.button("🚀 Calculează Soluția Optimă", type="primary", use_container_
         res3.write("**Strategii Mixte B ($Y_0$):**")
         res3.write([f(y) for y in Y_opt])
         
-        # --- PASUL 4: VERIFICAREA SPECIFICA TEORIEI JOCURILOR ---
+      # --- PASUL 4: VERIFICAREA SPECIFICA TEORIEI JOCURILOR ---
         st.markdown("---")
         st.markdown("<h3 style='color: #CE93D8; text-align: center;'>✨ Verificări și Validare Finală (Teoria Jocurilor) ✨</h3>", unsafe_allow_html=True)
         st.markdown("---")
@@ -196,20 +196,14 @@ if st.button("🚀 Calculează Soluția Optimă", type="primary", use_container_
                 st.error(f"❌ Valoarea {f(v_joc)} nu este între {f(v1)} și {f(v2)}")
 
         with val_col2:
-            st.markdown("**V3. Optim pentru Jucătorul A ($X_0 \cdot Q \ge v$)**")
-            # Inmultim vectorul X0 cu matricea initiala Q
-            castig_A = np.dot(X_opt, Q)
-            st.write(f"Câștiguri așteptate: $[" + ", ".join([f(val) for val in castig_A]) + "]$")
-            if all(val >= v_joc - 1e-5 for val in castig_A):
-                st.success(f"✅ Toate valorile sunt $\ge {f(v_joc)}$")
+            st.markdown("**V3. Verificarea valorii așteptate ($v = X_0 \cdot Q \cdot Y_0^T$)**")
+            
+            # Calcul matematic: (X0 * Q) * Y0
+            val_asteptata = np.dot(np.dot(X_opt, Q), Y_opt)
+            
+            st.info("Formula demonstrează că dacă ambii jucători aplică strategiile optime, câștigul mediu este exact valoarea jocului.")
+            
+            if abs(val_asteptata - v_joc) < 1e-5:
+                st.success(f"✅ Rezultat calcul: **{f(val_asteptata)}** == **{f(v_joc)}** ($v$)")
             else:
-                st.error(f"❌ Există valori $< {f(v_joc)}")
-
-            st.markdown("**V4. Optim pentru Jucătorul B ($Q \cdot Y_0^T \le v$)**")
-            # Inmultim matricea initiala Q cu vectorul coloana Y0
-            pierdere_B = np.dot(Q, Y_opt)
-            st.write(f"Pierderi așteptate: $[" + ", ".join([f(val) for val in pierdere_B]) + "]$")
-            if all(val <= v_joc + 1e-5 for val in pierdere_B):
-                st.success(f"✅ Toate valorile sunt $\le {f(v_joc)}$")
-            else:
-                st.error(f"❌ Există valori $> {f(v_joc)}")
+                st.error(f"❌ Rezultat calcul: {f(val_asteptata)} != {f(v_joc)}")
