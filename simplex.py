@@ -135,7 +135,7 @@ def ruleaza_iteratii_simplex(TS, XB, Cj, baza, nume_var, opt_tip):
 
 def validare_solutie(XB_final, Z_final, deltas_final, baza_finala, TS_final, A_prim_init, b_init, c_init, mapare, nume_v, opt_t):
     st.markdown("---")
-    st.markdown("<h3 style='color: #CE93D8; text-align: center;'>✨ VERIFICĂRI ȘI VALIDARE FINALĂ ✨</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color: #CE93D8; text-align: center;'> VALIDAREA SOLUȚIEI ASP </h3>", unsafe_allow_html=True)
     st.markdown("---")
 
     col1, col2 = st.columns(2)
