@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from simplex import f, pregateste_forma_standard, ruleaza_iteratii_simplex, validare_solutie
 
-# --- CONFIGURARE PAGINA SI DESIGN ---
+                                                                # CONFIGURARE PAGINA SI DESIGN 
 st.set_page_config(page_title="Teoria Jocurilor", layout="wide")
 
 st.markdown("""
@@ -36,7 +36,7 @@ st.markdown('''
 
 st.divider()
 
-# --- LOGICA TEORIA JOCURILOR ---
+                                                                     # LOGICA TEORIA JOCURILOR 
 
 def analiza_strategii_pure(Q):
     # Calculul valorilor Maximin (v1) și Minimax (v2) pentru a detecta punctul șa
@@ -52,7 +52,7 @@ def analiza_strategii_pure(Q):
         return True, v1, (idx_linie, idx_col), alpha, beta
     return False, (v1, v2), None, alpha, beta
 
-# --- INTERFATA UTILIZATOR ---
+                                                                     # INTERFATA UTILIZATOR 
 
 st.sidebar.header("⚙️ Configurare Joc")
 n_linii = st.sidebar.number_input("Strategii Jucător A (Linii)", 2, 6, 3)
@@ -73,7 +73,7 @@ Q = edited_df.values
 if st.button("🚀 Calculează Soluția Optimă", type="primary", use_container_width=True):
     st.divider()
     
-    # --- PASUL 1: Analiza Strategiilor Pure ---
+                                                               # PASUL 1: Analiza Strategiilor Pure 
     st.markdown("<h3 style='color: #CE93D8;'>2. Pasul 1: Calculăm: α, β, v1, v2</h3>", unsafe_allow_html=True)
     are_sa, val_sa, pos, alpha, beta = analiza_strategii_pure(Q)
     v1, v2 = np.max(alpha), np.min(beta)
@@ -90,7 +90,7 @@ if st.button("🚀 Calculează Soluția Optimă", type="primary", use_container_
         st.success(f"✅ PUNCT ȘA DETECTAT: a{pos[0]+1}, b{pos[1]+1}")
         st.metric("Valoarea Jocului (v)", f(val_sa))
     else:
-        # --- PASUL 2: Strategii Mixte prin Programare Liniara ---
+                                                     # PASUL 2: Strategii Mixte prin Programare Liniara 
         st.warning(f"⚠️ $v_1 < v_2$: Jocul nu are punct șa. Trecem la Strategii Mixte.")
         
         # Pozitivarea matricei (Transformarea jocului pentru a asigura v > 0)
@@ -118,34 +118,71 @@ if st.button("🚀 Calculează Soluția Optimă", type="primary", use_container_
         # Validare logică PL (verificare Dj, nenegativitate și ecuație de bază S)
         validare_solutie(XB_f, Z_f, Dj_f, baza_f, TS_f, A_prim_init, b_backup, c_pl, mapare, nume_v, 'MAX')
         
-        # --- PASUL 3: Recuperare Strategii Mixte ---
+        # CALCUL VALORI INTERMEDIARE PENTRU EXPLICATII 
+        v_joc = (1 / Z_f) - k 
+        inv_z = 1 / Z_f
+        
+        # Extragem valorile PL brute inainte de a le inmulti (X_A si Y_B conform cursului)
+        val_tab_final = {nume_v[i]: 0.0 for i in range(len(nume_v))}
+        for i in range(len(XB_f)): 
+            val_tab_final[nume_v[baza_f[i]]] = XB_f[i]
+            
+        Y_B = [val_tab_final[f"x{j+1}"] for j in range(n_coloane)] # Solutia PL pt B (din baza)
+        X_A = [abs(Dj_f[n_coloane + i]) for i in range(n_linii)]   # Solutia PL pt A (din Delta)
+        
+        Y_opt = [y * inv_z for y in Y_B]
+        X_opt = [x * inv_z for x in X_A]
+
+        #  EXPLICATII TRECERE PL -> TEORIA JOCURILOR 
+        st.markdown("---")
+        st.markdown("<h3 style='color: #4A148C; background-color: #F3E5F5; padding: 12px; border-radius: 8px; border-left: 5px solid #CE93D8;'>🔄 Trecerea de la Soluția PL la Soluția Jocului</h3>", unsafe_allow_html=True)
+        
+        ex1, ex2 = st.columns(2)
+        with ex1:
+            st.markdown("**1. Preluarea soluțiilor din tabelul optim:**")
+            st.markdown("- **Pentru Jucătorul B ($Y_B$)**: Se citesc valorile din coloana variabilelor de bază ($X_B$).")
+            st.latex(rf"Y_B = ({', '.join([f(y) for y in Y_B])})")
+            
+            st.markdown("- **Pentru Jucătorul A ($X_A$)**: Se citesc valorile (în modul) din linia $\Delta_j$ corespunzătoare variabilelor de ecart (dualitate).")
+            st.latex(rf"X_A = ({', '.join([f(x) for x in X_A])})")
+            
+        with ex2:
+            st.markdown(f"**2. Calculul valorii jocului ($v$):**")
+            st.write(f"Valoarea funcției obiectiv PL este $g_{{max}} = {f(Z_f)}$.")
+            if k > 0:
+                st.write(f"Deoarece matricea a fost pozitivată inițial adunând $k = {k}$ la toate elementele, valoarea reală a jocului este:")
+                st.latex(rf"v = \frac{{1}}{{g_{{max}}}} - k = {f(inv_z)} - {k} = {f(v_joc)}")
+            else:
+                st.latex(rf"v = \frac{{1}}{{g_{{max}}}} = {f(v_joc)}")
+                
+        st.markdown("**3. Calculul probabilităților optime (Strategiile Mixte $X_0, Y_0$):**")
+        st.markdown(f"Strategiile mixte se obțin prin înmulțirea vectorilor $X_A$ și $Y_B$ cu factorul $1 / g_{{max}}$ (adică ${f(inv_z)}$):")
+        
+        st.latex(rf"X_0 = \frac{{1}}{{g_{{max}}}} \cdot X_A = {f(inv_z)} \cdot ({', '.join([f(x) for x in X_A])}) \implies X_0 = ({', '.join([f(x) for x in X_opt])})")
+        st.latex(rf"Y_0 = \frac{{1}}{{g_{{max}}}} \cdot Y_B = {f(inv_z)} \cdot ({', '.join([f(y) for y in Y_B])}) \implies Y_0 = ({', '.join([f(y) for y in Y_opt])})")
+
+                                                                     # PASUL 3: Rezultate Finale 
+        st.markdown("---")
         st.markdown("<h3 style='color: #CE93D8;'>4. Pasul 3: Rezultate Finale</h3>", unsafe_allow_html=True)
         
-        # Revenirea la valoarea reală: v = (1/Z) - k
-        v_joc = (1 / Z_f) - k 
-        
-        # Extracția probabilităților: X_opt din Delta variabilelor duale, Y_opt din variabilele din baza
-        val_tab_final = {nume_v[i]: 0.0 for i in range(len(nume_v))}
-        for i in range(len(XB_f)): val_tab_final[nume_v[baza_f[i]]] = XB_f[i]
-        Y_opt = [val_tab_final[f"x{j+1}"] * (1/Z_f) for j in range(n_coloane)]
-        X_opt = [abs(Dj_f[n_coloane + i]) * (1/Z_f) for i in range(n_linii)]
-
         res1, res2, res3 = st.columns(3)
         res1.metric("Valoarea Jocului (v)", f(v_joc))
         res2.write("**Strategii Mixte A ($X_0$):**"); res2.write([f(x) for x in X_opt])
         res3.write("**Strategii Mixte B ($Y_0$):**"); res3.write([f(y) for y in Y_opt])
         
-        # --- PASUL 4: Validare Teoria Jocurilor (V3: v = X0 * Q * Y0^T) ---
+                                                       #  PASUL 4: Validare Teoria Jocurilor (V3: v = X0 * Q * Y0^T) 
         st.markdown("---")
-        st.markdown("<h3 style='color: #CE93D8; text-align: center;'> Verificări Specifice </h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color: #CE93D8; text-align: center;'> Verificări Specifice Teoriei Jocurilor</h3>", unsafe_allow_html=True)
         
         val_col1, val_col2 = st.columns(2)
         with val_col1:
-            st.markdown("**V1 & V2: Normalizare (Σ=1) și încadrare (v1 ≤ v ≤ v2)**")
-            st.success(f"ΣX={f(sum(X_opt))}, ΣY={f(sum(Y_opt))}")
-            st.success(f"v1({f(v1)}) ≤ v({f(v_joc)}) ≤ v2({f(v2)})")
+            st.markdown("**V1 & V2: Normalizare ($\sum=1$) și încadrare ($v_1 \le v \le v_2$)**")
+            st.success(f"$\sum X = {f(sum(X_opt))}$ , $\sum Y = {f(sum(Y_opt))}$")
+            st.success(f"$v_1$ ({f(v1)}) $\le v$ ({f(v_joc)}) $\le v_2$ ({f(v2)})")
         with val_col2:
-            st.markdown("**V3: Relația fundamentală v = X0 * Q * Y0^T**")
+            st.markdown("**V3: Relația fundamentală $v = X_0 \cdot Q \cdot Y_0^T$**")
             val_calc = np.dot(np.dot(X_opt, Q), Y_opt)
-            if abs(val_calc - v_joc) < 1e-5: st.success(f"✅ {f(val_calc)} == {f(v_joc)}")
-            else: st.error(f"❌ {f(val_calc)} != {f(v_joc)}")
+            if abs(val_calc - v_joc) < 1e-5: 
+                st.success(f"✅ Calcul direct în funcție: {f(val_calc)} == {f(v_joc)}")
+            else: 
+                st.error(f"❌ {f(val_calc)} != {f(v_joc)}")
