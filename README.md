@@ -3,7 +3,7 @@
 > Academic project developed for the **Operations Research** course  
 > Faculty of Applied Sciences
 
----
+----
 
 ## Table of Contents
 
